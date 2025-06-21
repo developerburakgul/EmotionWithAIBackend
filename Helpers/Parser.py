@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Dict, List
 import unicodedata
 from Constants.DateFormats import WHATSAPP_DATE_FORMAT
+from Helpers.FormatDate import format_datetime
 from Helpers.MessageGroupManager import MessageGroupManager
 from Models.GroupMessage import GroupMessage
 from Models.Message import Message
@@ -47,7 +48,8 @@ class Parser:
                         continue
 
                     messages.append(Message(
-                        timestamp=timestamp,  # datetime objesi olarak sakla
+                        #timestamp=timestamp,  # datetime objesi olarak sakla
+                        timestamp = format_datetime(timestamp),  # ISO 8601 formatında string olarak sakla
                         sender=sender,
                         text=text
                     ))

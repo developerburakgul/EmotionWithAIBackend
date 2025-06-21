@@ -49,7 +49,8 @@ class EmotionAnalyzer:
                 sender=group_message.sender,
                 start_time=group_message.start_time,
                 end_time=group_message.end_time,
-                emotion=emotion
+                emotion=emotion,
+                messageCount=group_message.count
             )
             results.append(client_message)
             

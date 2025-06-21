@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Any, Optional, TypeVar, Generic
 from pydantic import BaseModel, Field, field_serializer
+from Helpers.FormatDate import format_datetime  # <-- EKLE
 
 T = TypeVar('T')
 
@@ -19,11 +20,11 @@ class ApiResponse(BaseModel):
 
     @field_serializer('timestamp')
     def serialize_datetime(self, dt: datetime, _info):
-        return dt.isoformat()
+        return format_datetime(dt)  # <-- GÜNCELLE
 
     class Config:
         json_encoders = {
-            datetime: lambda dt: dt.isoformat()
+            datetime: format_datetime  # <-- GÜNCELLE
         }
 
     @classmethod

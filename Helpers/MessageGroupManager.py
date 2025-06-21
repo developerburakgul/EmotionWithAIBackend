@@ -9,6 +9,7 @@ class MessageGroupManager:
         self.start_time = msg.timestamp
         self.end_time = msg.timestamp
         self.text = msg.text
+        self.count = 1  # İlk mesajı ekledik
 
     def can_append(self, msg: Message, time_threshold: int = 300) -> bool:
         """Yeni mesajın gruba eklenip eklenemeyeceğini kontrol eder"""
@@ -21,6 +22,7 @@ class MessageGroupManager:
         """Gruba yeni mesaj ekler"""
         self.text += f" {msg.text}"
         self.end_time = msg.timestamp
+        self.count += 1  # Mesaj sayısını artır
 
     def to_group_message(self) -> GroupMessage:
         """Grup mesajını GroupMessage nesnesine dönüştürür"""
@@ -28,5 +30,6 @@ class MessageGroupManager:
             sender=self.sender,
             start_time=self.start_time,
             end_time=self.end_time,
-            text=self.text
+            text=self.text,
+            count=self.count  # count'u da döndür
         )
