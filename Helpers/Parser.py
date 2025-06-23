@@ -2,6 +2,10 @@ from datetime import datetime
 from typing import Dict, List
 import unicodedata
 from Constants.DateFormats import WHATSAPP_DATE_FORMAT
+
+# Ek olarak:
+ALTERNATIVE_WHATSAPP_DATE_FORMAT = "%d.%m.%Y %H:%M:%S"
+
 from Helpers.FormatDate import format_datetime
 from Helpers.MessageGroupManager import MessageGroupManager
 from Models.GroupMessage import GroupMessage
@@ -10,56 +14,66 @@ from Models.Message import Message
 
 class Parser:
 
-    @staticmethod 
+    @staticmethod
     def removeControlCharacters(input_text: str) -> str:
         """Metin string'inden kontrol karakterlerini temizle."""
         return ''.join(c for c in input_text if not unicodedata.category(c).startswith('C'))
-    
-    
+
     @staticmethod
     def parse_messages(input_text: str) -> List[Message]:
         """WhatsApp formatındaki mesajları metin string'inden ayrıştır ve Message modeli olarak döndür.
-        Format: [DD.MM.YYYY, HH:MM:SS] Sender: Message
-        
+        Format: [DD.MM.YYYY HH:MM:SS] Sender: Message
+
         Raises:
             ValueError: Mesaj formatı geçersiz olduğunda veya parse edilemediğinde
         """
         messages = []
-        try:
-            for line in input_text.splitlines():
-                line = Parser.removeControlCharacters(line.strip())
-                if not line:
-                    continue
+        for line in input_text.splitlines():
+            line = Parser.removeControlCharacters(line.strip())
+            if not line:  # Boş satırları atla
+                continue
+
+            try:
+                # Mesaj formatını kontrol et: [tarih] gönderici: metin
+                if not (line.startswith('[') and '] ' in line and ': ' in line):
+                    continue  # Geçersiz format, bu satırı atla
+
+                # WhatsApp formatını parse et
+                timestamp_str, rest = line.split("] ", 1)
+                timestamp_str = timestamp_str[1:]  # Başındaki [ karakterini kaldır
+                sender, text = rest.split(": ", 1)
+
+                # Tarih formatını parse et
                 try:
-                    # WhatsApp formatını parse et
-                    timestamp_str, rest = line.split("] ", 1)
-                    timestamp_str = timestamp_str[1:]  # Remove leading [
-                    sender, text = rest.split(": ", 1)
-                    
-                    # WhatsApp formatında tarihi parse et
                     timestamp = datetime.strptime(timestamp_str, WHATSAPP_DATE_FORMAT)
+                except ValueError:
+                    try:
+                        timestamp = datetime.strptime(timestamp_str, ALTERNATIVE_WHATSAPP_DATE_FORMAT)
+                    except ValueError:
+                        continue  # Tarih formatı uyuşmazsa satırı atla
 
-                    # Özel durumları filtrele
-                    if any(phrase in text.lower() for phrase in [
-                        "sticker omitted",
-                        "voice call", 
-                        "view once message"
-                    ]):
-                        continue
+                # Özel durumları filtrele
+                if any(phrase in text.lower() for phrase in [
+                    "sticker omitted",
+                    "voice call",
+                    "view once message"
+                ]):
+                    continue
 
-                    messages.append(Message(
-                        #timestamp=timestamp,  # datetime objesi olarak sakla
-                        timestamp = format_datetime(timestamp),  # ISO 8601 formatında string olarak sakla
-                        sender=sender,
-                        text=text
-                    ))
-                except (ValueError, IndexError) as e:
-                    raise ValueError(f"Geçersiz mesaj formatı: {line}. Hata: {str(e)}")
-            
-            return messages
-            
-        except Exception as e:
-            raise ValueError(f"Mesaj ayrıştırma hatası: {str(e)}")
+                messages.append(Message(
+                    timestamp=format_datetime(timestamp),  # ISO 8601 formatında string
+                    sender=sender,
+                    text=text
+                ))
+            except (ValueError, IndexError) as e:
+                # Hatalı satırı atla, loglama yapılabilir
+                print(f"Uyarı: Geçersiz mesaj formatı atlandı: {line}. Hata: {str(e)}")
+                continue
+
+        if not messages:
+            raise ValueError("Hiçbir geçerli mesaj bulunamadı.")
+
+        return messages
     
 
     @staticmethod 
