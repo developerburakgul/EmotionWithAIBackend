@@ -32,6 +32,8 @@ async def analyze_one_time_emotion(request: OneTimeEmotionRequest):
             # Çeviri başarısızsa orijinal metni kullan
             translated_text = request.text
 
+        print("Çeviri sonucu:", translated_text)
+
         analyzer = EmotionAnalyzer()
         emotion: Emotion = analyzer.analyze_message(translated_text)
         return Response(

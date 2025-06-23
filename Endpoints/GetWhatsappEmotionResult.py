@@ -73,10 +73,10 @@ async def analyze_whatsapp_chat(request: WhatsappTextRequest):
             translator = TextTranslator(source_lang='auto', target_lang='en')
             for msg in messages:
                 try:
-                    msg['translated_text'] = translator.translate_to_english(msg['text'])
+                    msg.translated_text = translator.translate_to_english(msg.text)
                 except Exception as te:
-                    logger.warning(f"Translation failed for message: {msg['text']} - {te}")
-                    msg['translated_text'] = msg['text']  # Çeviri başarısızsa orijinal metni kullan
+                    logger.warning(f"Translation failed for message: {msg.text} - {te}")
+                    msg.translated_text = msg.text  # Çeviri başarısızsa orijinal metni kullan
         except Exception as te:
             logger.error(f"Translation error: {te}", exc_info=True)
             return Response(

@@ -5,6 +5,7 @@ class Message(BaseModel):
     timestamp: datetime
     sender: str
     text: str
+    translated_text: str | None = None  # <-- EKLENDİ
 
     @field_serializer('timestamp')
     def serialize_datetime(self, dt: datetime, _info):
