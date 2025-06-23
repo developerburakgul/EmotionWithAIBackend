@@ -1,8 +1,6 @@
 from Models.Client.ApiResponse import ApiResponse
-from fastapi import FastAPI, HTTPException
+from fastapi import APIRouter, HTTPException, Response
 from transformers import pipeline, AutoTokenizer
-from pydantic import BaseModel
-from typing import Dict, Any
 
 # Global model configurations
 MODEL_NAME = "j-hartmann/emotion-english-distilroberta-base"
@@ -11,27 +9,17 @@ MODEL_NAME = "j-hartmann/emotion-english-distilroberta-base"
 classifier = pipeline("sentiment-analysis", model=MODEL_NAME)
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 
-app = FastAPI()
+router = APIRouter()
 
-
-@app.get("/api/v1/model/max-input-size", response_model=ApiResponse)
+@router.get("/api/v1/model/max-input-size", response_model=ApiResponse)
 async def get_max_input_size():
     """
     Duygu analizi modelinin alabileceği maksimum input boyutunu döndürür.
-    
-    Returns:
-        ApiResponse: Başarı durumu ve maksimum input boyutu bilgisi
     """
     try:
         max_tokens = tokenizer.model_max_length
-        # Yaklaşık hesaplama:
-        # 1 token ≈ 4 karakter
-        # 1 karakter = 1 byte (UTF-8 ASCII için)
         approx_bytes = max_tokens * 4
-        
-        # Byte'ı KB'a çevirme
         approx_kb = approx_bytes / 1024
-        
         return ApiResponse(
             success=True,
             data={
@@ -43,24 +31,13 @@ async def get_max_input_size():
                 "status": "success"
             }
         )
-    
-        
-
-    
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=ApiResponse(
-                success=False,
-                error={
-                    "code": "MODEL_ERROR",
-                    "message": "Model bilgisi alınırken hata oluştu",
-                    "details": str(e)
-                }
-            ).dict()
+        return Response(
+            content=ApiResponse.error_response(
+                code="MODEL_ERROR",
+                message="Model bilgisi alınırken hata oluştu",
+                details=str(e)
+            ).model_dump_json(),
+            media_type="application/json",
+            status_code=200
         )
-
-# Swagger/OpenAPI dokümantasyonu için metadata
-app.title = "Emotion Analysis API"
-app.description = "Duygu analizi modeli için API endpoints"
-app.version = "1.0.0"

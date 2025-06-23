@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, APIRouter
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, Response
 from datetime import datetime
@@ -7,9 +7,11 @@ from Models.Client.ApiResponse import ApiResponse
 from Models.Client.Response import AnalysisSummary, ParticipantData, UserInfo, WhatsappAnalysisResponse, WhatsappTextRequest
 from Helpers.Parser import Parser
 from Helpers.EmotionAnalyzer import EmotionAnalyzer
+from Helpers.Translator import TextTranslator
 import logging
 
 app = FastAPI()
+router = APIRouter()
 
 # Swagger/OpenAPI dokümantasyonu için metadata
 app.title = "WhatsApp Emotion Analysis API"
@@ -20,7 +22,7 @@ app.version = "1.0.0"
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-@app.post("/api/v1/analyze/whatsapp", response_model=ApiResponse)
+@router.post("/api/v1/analyze/whatsapp", response_model=ApiResponse)
 async def analyze_whatsapp_chat(request: WhatsappTextRequest):
     try:
         logger.info("Endpoint '/api/v1/analyze/whatsapp' called.")
@@ -60,6 +62,28 @@ async def analyze_whatsapp_chat(request: WhatsappTextRequest):
                     code="NO_VALID_MESSAGES",
                     message="Geçerli WhatsApp mesajı bulunamadı",
                     details="Mesaj listesi boş"
+                ).model_dump_json(),
+                media_type="application/json",
+                status_code=200
+            )
+
+        # 1.5 Mesajları İngilizce'ye çevir
+        try:
+            logger.info("Translating messages to English.")
+            translator = TextTranslator(source_lang='auto', target_lang='en')
+            for msg in messages:
+                try:
+                    msg['translated_text'] = translator.translate_to_english(msg['text'])
+                except Exception as te:
+                    logger.warning(f"Translation failed for message: {msg['text']} - {te}")
+                    msg['translated_text'] = msg['text']  # Çeviri başarısızsa orijinal metni kullan
+        except Exception as te:
+            logger.error(f"Translation error: {te}", exc_info=True)
+            return Response(
+                content=ApiResponse.error_response(
+                    code="TRANSLATION_ERROR",
+                    message="Mesajlar çevrilemedi",
+                    details=str(te)
                 ).model_dump_json(),
                 media_type="application/json",
                 status_code=200
@@ -155,3 +179,5 @@ async def global_exception_handler(request: Request, exc: Exception):
         status_code=500,
         content=error_response.model_dump()
     )
+
+app.include_router(router)

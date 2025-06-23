@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+transformers
+torch
+scikit-learn
+pydantic
+python-dotenv
+httpx
+deep-translator
