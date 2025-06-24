@@ -7,8 +7,10 @@ from Models.Client.ApiResponse import ApiResponse
 from Models.Client.Response import AnalysisSummary, ParticipantData, UserInfo, WhatsappAnalysisResponse, WhatsappTextRequest
 from Helpers.Parser import Parser
 from Helpers.EmotionAnalyzer import EmotionAnalyzer
-from Helpers.Translator import TextTranslator
+from Helpers.Translator import GoogleCloudTextTranslator
+from Secret.consts import GOOGLE_TRANSLATE_API_KEY
 import logging
+import time
 
 app = FastAPI()
 router = APIRouter()
@@ -67,28 +69,6 @@ async def analyze_whatsapp_chat(request: WhatsappTextRequest):
                 status_code=200
             )
 
-        # 1.5 Mesajları İngilizce'ye çevir
-        try:
-            logger.info("Translating messages to English.")
-            translator = TextTranslator(source_lang='auto', target_lang='en')
-            for msg in messages:
-                try:
-                    msg.translated_text = translator.translate_to_english(msg.text)
-                except Exception as te:
-                    logger.warning(f"Translation failed for message: {msg.text} - {te}")
-                    msg.translated_text = msg.text  # Çeviri başarısızsa orijinal metni kullan
-        except Exception as te:
-            logger.error(f"Translation error: {te}", exc_info=True)
-            return Response(
-                content=ApiResponse.error_response(
-                    code="TRANSLATION_ERROR",
-                    message="Mesajlar çevrilemedi",
-                    details=str(te)
-                ).model_dump_json(),
-                media_type="application/json",
-                status_code=200
-            )
-
         # 2. Mesajları grupla
         try:
             logger.info("Grouping messages by sender.")
@@ -100,6 +80,24 @@ async def analyze_whatsapp_chat(request: WhatsappTextRequest):
                     code="GROUP_ERROR",
                     message="Mesajlar gruplanamadı",
                     details=str(ge)
+                ).model_dump_json(),
+                media_type="application/json",
+                status_code=200
+            )
+
+        # 2.5 Her katılımcının mesajlarını İngilizce'ye çevir
+        try:
+            logger.info("Translating grouped messages to English.")
+            translator = GoogleCloudTextTranslator(source_lang='auto', target_lang='en')
+            for sender, msgs in grouped_messages.items():
+                grouped_messages[sender] = translator.translate_messages_batch(msgs)
+        except Exception as te:
+            logger.error(f"Translation error: {te}", exc_info=True)
+            return Response(
+                content=ApiResponse.error_response(
+                    code="TRANSLATION_ERROR",
+                    message="Mesajlar çevrilemedi",
+                    details=str(te)
                 ).model_dump_json(),
                 media_type="application/json",
                 status_code=200

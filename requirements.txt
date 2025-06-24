@@ -7,3 +7,5 @@ pydantic
 python-dotenv
 httpx
 deep-translator
+google-cloud-translate
+deepl

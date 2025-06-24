@@ -8,6 +8,7 @@ class GroupMessage(BaseModel):
     sender: str
     text: str
     count: int  # Grup içindeki mesaj sayısı
+    translated_text: str = None  # <-- Bunu ekle!
 
     @field_serializer('start_time', 'end_time')
     def serialize_datetime(self, dt: datetime, _info):
