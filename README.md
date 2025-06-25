@@ -2,6 +2,9 @@
 
 A FastAPI backend for WhatsApp chat and single-message emotion analysis using transformer models and translation APIs.
 
+**Model Used:**  
+This project uses the [`j-hartmann/emotion-english-distilroberta-base`](https://huggingface.co/j-hartmann/emotion-english-distilroberta-base) transformer model for emotion classification.
+
 ## Features
 
 - Analyze emotions in WhatsApp chat exports (multi-participant, Turkish or other languages supported)
@@ -27,23 +30,7 @@ A FastAPI backend for WhatsApp chat and single-message emotion analysis using tr
 2. **Create and activate a virtual environment:**
 
    ```sh
-   python3 -m venv venv## How it works
-
-1. **Message Parsing:**  
-   WhatsApp chat text is parsed into individual messages and participants.
-
-2. **Message Grouping:**  
-   Messages are grouped by sender and time intervals for meaningful analysis.
-
-3. **Translation:**  
-   Each group of messages is translated to English using the Google Cloud Translation API.
-
-4. **Emotion Analysis:**  
-   The translated message groups are analyzed using the transformer model  
-   **Model:** [`j-hartmann/emotion-english-distilroberta-base`](https://huggingface.co/j-hartmann/emotion-english-distilroberta-base)
-
-5. **Results:**  
-   The API returns a structured JSON with emotion results for each participant and message group.
+   python3 -m venv venv
    source venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
 
@@ -65,6 +52,38 @@ A FastAPI backend for WhatsApp chat and single-message emotion analysis using tr
 
 5. **(Optional) Update `.gitignore` to avoid committing secrets:**
    - The `.gitignore` already ignores the `secret/` directory.
+
+## How it works
+
+1. **Message Parsing:**  
+   WhatsApp chat text is parsed into individual messages and participants.
+
+2. **Message Grouping:**  
+   Messages are grouped by sender and time intervals for meaningful analysis.
+
+3. **Translation:**  
+   Each group of messages is translated to English using the Google Cloud Translation API.
+
+4. **Emotion Analysis:**  
+   The translated message groups are analyzed using the transformer model  
+   **Model:** [`j-hartmann/emotion-english-distilroberta-base`](https://huggingface.co/j-hartmann/emotion-english-distilroberta-base)
+
+5. **Results:**  
+   The API returns a structured JSON with emotion results for each participant and message group.
+
+---
+
+### WhatsApp Chat Emotion Analysis Endpoint (`/api/v1/analyze/whatsapp`)
+
+This endpoint processes WhatsApp chat exports as follows:
+
+- **Parsing:** The raw WhatsApp chat text is parsed into individual messages and participants.
+- **Grouping:** Messages are grouped by sender and by time intervals for context-aware analysis.
+- **Translation:** Each group of messages is translated to English (if not already in English) using the Google Cloud Translation API.
+- **Emotion Analysis:** The translated message groups are analyzed using the `j-hartmann/emotion-english-distilroberta-base` transformer model.
+- **Response:** The API returns a structured JSON with emotion results for each participant and message group.
+
+---
 
 ## Running the API
 
@@ -121,4 +140,4 @@ python Tests/Test.py
 
 ## License
 
-MIT License (or specify
+MIT License (or specify your license here)
