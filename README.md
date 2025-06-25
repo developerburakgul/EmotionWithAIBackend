@@ -18,23 +18,43 @@ A FastAPI backend for WhatsApp chat and single-message emotion analysis using tr
 ## Setup
 
 1. **Clone the repository:**
+
    ```sh
    git clone <https://github.com/developerburakgul/EmotionWithAIBackend.git>
    cd EmotionWithAIBackend
    ```
 
 2. **Create and activate a virtual environment:**
+
    ```sh
-   python3 -m venv venv
+   python3 -m venv venv## How it works
+
+1. **Message Parsing:**  
+   WhatsApp chat text is parsed into individual messages and participants.
+
+2. **Message Grouping:**  
+   Messages are grouped by sender and time intervals for meaningful analysis.
+
+3. **Translation:**  
+   Each group of messages is translated to English using the Google Cloud Translation API.
+
+4. **Emotion Analysis:**  
+   The translated message groups are analyzed using the transformer model  
+   **Model:** [`j-hartmann/emotion-english-distilroberta-base`](https://huggingface.co/j-hartmann/emotion-english-distilroberta-base)
+
+5. **Results:**  
+   The API returns a structured JSON with emotion results for each participant and message group.
    source venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
 
 3. **Install dependencies:**
+
    ```sh
    pip install -r requirements.txt
    ```
 
 4. **Set up Google Cloud Translation API credentials:**
+
    - Go to [Google Cloud Console](https://console.cloud.google.com/).
    - Create a service account and download the JSON credentials file.
    - Place the credentials file at `Secret/google-credentials.json`.
