@@ -90,7 +90,7 @@ This endpoint processes WhatsApp chat exports as follows:
 Start the FastAPI server using `uvicorn`:
 
 ```sh
-uvicorn main:app --reload
+python -m uvicorn main:app --reload
 ```
 
 The API will be available at [http://localhost:8000](http://localhost:8000).
